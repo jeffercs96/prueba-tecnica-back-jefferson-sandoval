@@ -1,3 +1,5 @@
+using RouletteApi.Enums;
+
 namespace RouletteApi.Models;
 
 /// <summary>
@@ -7,8 +9,10 @@ public class BetRequest
 {
     public string PlayerName { get; set; } = string.Empty;
     public decimal Amount { get; set; }
-    public string BetType { get; set; } = string.Empty; // "color", "parityColor", "numberColor"
-    public string Choice { get; set; } = string.Empty;  // Ej: "RED", "BLACK", "RED-EVEN", "13-RED"
+    public BetType BetType { get; set; }
+    public RouletteColor? ColorChoice { get; set; } // Para Color o Color+Parity
+    public Parity? ParityChoice { get; set; } // for Color+Parity
+    public int? NumberChoice { get; set; } // for Number+Color
     public int SpinNumber { get; set; } // number that came up on the roulette
-    public string SpinColor { get; set; } = string.Empty; // color that came up on the roulette
+    public RouletteColor SpinColor { get; set; } // color that came up on the roulette
 }

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouletteApi.DbContext;
-using RouletteApi.Entities;
+using RouletteApi.Enums;
 using RouletteApi.Models;
 
 namespace RouletteApi.Controllers;
@@ -45,35 +45,33 @@ public class RouletteController : ControllerBase
         if (player is null)
             return NotFound(new { message = "Player not found" });
 
-        // Verificar fondos suficientes
+        // Verify insufficient funds
         if (player.Balance < bet.Amount)
             return BadRequest(new { message = "Insufficient funds" });
 
-        // Restar la apuesta al inicio
+        // Deduct the bet amount
         player.Balance -= bet.Amount;
 
         bool won = false;
         decimal prize = 0;
 
-        switch (bet.BetType.ToLower())
+        switch (bet.BetType)
         {
-            case "color":
-                won = bet.Choice.Equals(bet.SpinColor, StringComparison.OrdinalIgnoreCase);
+            case BetType.Color:
+                won = bet.ColorChoice == bet.SpinColor;
                 prize = won ? bet.Amount * 1.5m : 0;
                 break;
 
-            case "paritycolor":
+            case BetType.ColorParity:
                 var isEven = bet.SpinNumber % 2 == 0;
-                var expected = bet.Choice.ToUpper(); // Ej: "RED-EVEN"
-                var actual = $"{bet.SpinColor.ToUpper()}-{(isEven ? "EVEN" : "ODD")}";
-                won = expected == actual;
+                won = bet.ColorChoice == bet.SpinColor &&
+                      bet.ParityChoice == (isEven ? Parity.Even : Parity.Odd);
                 prize = won ? bet.Amount * 2m : 0;
                 break;
 
-            case "numbercolor":
-                var expectedCombo = bet.Choice.ToUpper(); // Ej: "13-RED"
-                var actualCombo = $"{bet.SpinNumber}-{bet.SpinColor.ToUpper()}";
-                won = expectedCombo == actualCombo;
+            case BetType.NumberColor:
+                won = bet.NumberChoice == bet.SpinNumber &&
+                      bet.ColorChoice == bet.SpinColor;
                 prize = won ? bet.Amount * 3m : 0;
                 break;
 
@@ -81,7 +79,7 @@ public class RouletteController : ControllerBase
                 return BadRequest(new { message = "Invalid bet type" });
         }
 
-        // Si ganó, sumar el premio
+        // Update balance if won
         if (prize > 0)
             player.Balance += prize;
 
