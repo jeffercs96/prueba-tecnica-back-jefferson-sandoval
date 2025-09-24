@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RouletteApi.DbContext;
+using RouletteApi.DbContext.Responses;
 using RouletteApi.Enums;
 using RouletteApi.Models;
 
@@ -22,18 +23,22 @@ public class RouletteController : ControllerBase
     /// Spin the roulette and return a random number (0-36) with a random color.
     /// </summary>
     [HttpGet("spin")]
+    [ProducesResponseType(typeof(SpinResultResponse), 200)]
+    [ProducesResponseType(404)]
     public IActionResult Spin()
     {
         var number = _random.Next(0, 37); // 0–36
-        var color = _random.Next(0, 2) == 0 ? "RED" : "BLACK";
+        var color = _random.Next(0, 2) == 0 ? RouletteColor.Red : RouletteColor.Black;
 
-        return Ok(new { Number = number, Color = color });
+        return Ok(new SpinResultResponse(number, color));
     }
 
     /// <summary>
     /// Calculate the prize of a bet and update the player's wallet.
     /// </summary>
     [HttpPost("prize")]
+    [ProducesResponseType(typeof(BetResponse), 200)]
+    [ProducesResponseType(404)]
     public async Task<IActionResult> Prize([FromBody] BetRequest bet)
     {
         if (string.IsNullOrWhiteSpace(bet.PlayerName) || bet.Amount <= 0)
@@ -85,14 +90,14 @@ public class RouletteController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(new
-        {
+        return Ok(new BetResponse(
             bet.PlayerName,
             bet.SpinNumber,
             bet.SpinColor,
-            Won = won,
-            Prize = prize,
-            CurrentBalance = player.Balance
-        });
+            won,
+            prize,
+            player.Balance
+            )
+        );
     }
 }
