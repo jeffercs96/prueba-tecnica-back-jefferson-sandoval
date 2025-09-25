@@ -22,6 +22,12 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 #else
     options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseDb"));
 #endif
+
+    options.UseNpgsql(builder.Configuration.GetConnectionString("SupabaseDb"), o =>
+    {
+        o.CommandTimeout(120); // subir a 60 segundos
+        o.EnableRetryOnFailure(5); // hasta 5 reintentos en errores transitorios
+    });
 });
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
