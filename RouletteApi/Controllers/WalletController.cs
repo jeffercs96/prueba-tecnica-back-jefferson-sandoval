@@ -29,6 +29,9 @@ public class WalletController : ControllerBase
         if (string.IsNullOrWhiteSpace(wallet.Name))
             return BadRequest(new { message = "Name is required" });
 
+        if (wallet.Balance < 0m)
+            return BadRequest(new { message = "The balance can't negative" });
+
         wallet.Name = wallet.Name.Trim().ToUpper();
 
         var existing = await _context.Wallets
